@@ -17,9 +17,12 @@ export default defineConfig({
   datasource: {
     // Migrate / introspection use a direct (non-pooled) connection. Fall back to
     // the pooled URL when a dedicated direct URL is not configured.
+    // Tofu: then to DATABASE_URL, which a database Tofu manages supplies. Tofu
+    // applies supabase/migrations itself, so Migrate is not run against it.
     url:
       process.env.POSTGRES_URL_NON_POOLING ??
       process.env.POSTGRES_PRISMA_URL ??
+      process.env.DATABASE_URL ??
       '',
   },
 })

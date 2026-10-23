@@ -3,6 +3,7 @@ import {
   PERF_INSTRUMENTATION_ENABLED,
   recordQuery,
 } from '@/lib/perf-instrumentation'
+import { databasePoolConfig } from '@/lib/tofu-database'
 import { PrismaPg } from '@prisma/adapter-pg'
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient }
@@ -10,9 +11,9 @@ const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient }
 // Prisma 7 ships a Rust-free client and requires an explicit driver adapter.
 // We use the `pg` adapter with the pooled connection string.
 function createPrismaClient() {
-  const adapter = new PrismaPg({
-    connectionString: process.env['POSTGRES_PRISMA_URL'],
-  })
+  // Tofu: POSTGRES_PRISMA_URL, or DATABASE_URL when it is unset, with the TLS
+  // settings a Tofu-managed database needs (see src/lib/tofu-database.ts).
+  const adapter = new PrismaPg(databasePoolConfig())
   const client = new PrismaClient({
     adapter,
     // log: [{ emit: 'stdout', level: 'query' }],

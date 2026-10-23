@@ -14,7 +14,7 @@
     "check-types": "tsc --noEmit",
     "check-formatting": "prettier -c src e2e perf playwright.config.ts",
     "prettier": "prettier -w src e2e perf playwright.config.ts",
-    "postinstall": "prisma migrate deploy && prisma generate",
+    "postinstall": "prisma generate",
     "build-image": "./scripts/build-image.sh",
     "start-container": "docker compose --env-file container.env up",
     "test": "jest",

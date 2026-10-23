@@ -17,6 +17,15 @@ const interpretBlankEnvVarAsUndefined = (val: unknown): unknown =>
   typeof val === 'string' && val.trim() === '' ? undefined : val
 
 /**
+ * Tofu: a database Tofu manages supplies DATABASE_URL instead of the two
+ * POSTGRES_* variables, so each falls back to it when it is unset or blank.
+ * src/lib/prisma.ts and prisma.config.ts make the same fallback.
+ */
+const interpretBlankEnvVarAsDatabaseUrl = (val: unknown): unknown =>
+  interpretBlankEnvVarAsUndefined(val) ??
+  interpretBlankEnvVarAsUndefined(process.env.DATABASE_URL)
+
+/**
  * Splits a comma-separated variable into its items, dropping whitespace, blank
  * items and repeats: `plausible, umami,` reads as `['plausible', 'umami']`, and
  * a blank variable as `[]`. Order is kept.
@@ -35,8 +44,15 @@ const interpretEnvVarAsList = (val: unknown): unknown =>
 
 const envSchema = z
   .object({
-    POSTGRES_URL_NON_POOLING: z.string().url(),
-    POSTGRES_PRISMA_URL: z.string().url(),
+    // Tofu: both fall back to DATABASE_URL (see above).
+    POSTGRES_URL_NON_POOLING: z.preprocess(
+      interpretBlankEnvVarAsDatabaseUrl,
+      z.string().url(),
+    ),
+    POSTGRES_PRISMA_URL: z.preprocess(
+      interpretBlankEnvVarAsDatabaseUrl,
+      z.string().url(),
+    ),
     // Runtime override for the public base URL, so a prebuilt image can be
     // told where it is reachable without a rebuild. Takes precedence over
     // NEXT_PUBLIC_BASE_URL, which is baked in at build time.
